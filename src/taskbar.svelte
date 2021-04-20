@@ -2,11 +2,9 @@
   import Button from "./button/button.svelte";
   import InputGroup from "./input-group.svelte";
   import type { Shape, ShapeData } from "./types";
-  import { getConvertedShapeSize } from "./utils/shape";
 
   export let selectedShape: Shape | undefined;
   export let shapes: Shape[];
-  export let aspectRatio: number;
 
   export let onChange: (e: Shape | undefined) => void;
   export let onDuplicateShape: () => void;
@@ -16,17 +14,7 @@
 
   const onInput = (data: Partial<ShapeData>, isUnit = false) => {
     if (selectedShape) {
-      if (isUnit) {
-        onChange({
-          ...selectedShape,
-          ...getConvertedShapeSize(
-            { ...selectedShape.unitSizes, ...data },
-            aspectRatio
-          ),
-        });
-      } else {
-        onChange({ ...selectedShape, ...data });
-      }
+      onChange({ ...selectedShape, ...data });
     }
   };
 </script>
@@ -41,25 +29,25 @@
   <InputGroup
     type="number"
     name="x"
-    value={selectedShape?.unitSizes.x}
+    value={selectedShape?.x}
     on:input={({ detail: x }) => onInput({ x }, true)}
   />
   <InputGroup
     type="number"
     name="y"
-    value={selectedShape?.unitSizes.y}
+    value={selectedShape?.y}
     on:input={({ detail: y }) => onInput({ y }, true)}
   />
   <InputGroup
     type="number"
     name="w"
-    value={selectedShape?.unitSizes.w}
+    value={selectedShape?.w}
     on:input={({ detail: w }) => onInput({ w }, true)}
   />
   <InputGroup
     type="number"
     name="h"
-    value={selectedShape?.unitSizes.h}
+    value={selectedShape?.h}
     on:input={({ detail: h }) => onInput({ h }, true)}
   />
 

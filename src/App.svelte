@@ -3,26 +3,15 @@
   import Taskbar from "./taskbar.svelte";
   import Toolbar from "./toolbar.svelte";
   import type { Vector2D, Shape, ShapeData, Unit } from "./types";
-  import {
-    createShape,
-    findShapeById,
-    getConvertedShapeSize,
-    id,
-  } from "./utils/shape";
+  import { createShape, findShapeById, id } from "./utils/shape";
 
   let aspectRatio = 50;
   let canvasSize: Vector2D = { x: 600, y: 600 };
   let unit: Unit = "cm";
 
   let shapes: Shape[] = [
-    createShape({
-      name: "hallo",
-      ...getConvertedShapeSize({ x: 1, y: 1, w: 1, h: 1 }, aspectRatio),
-    }),
-    createShape({
-      name: "second",
-      ...getConvertedShapeSize({ x: 3, y: 4, w: 1, h: 1 }, aspectRatio),
-    }),
+    createShape({ name: "hallo", x: 1, y: 1, w: 1, h: 1 }),
+    createShape({ name: "second", x: 3, y: 4, w: 1, h: 1 }),
   ];
 
   let selectedShapeId: number | undefined = 0;
@@ -48,10 +37,7 @@
   };
 
   const onNewShape = () =>
-    createRect({
-      name: `Rect (${id})`,
-      ...getConvertedShapeSize({ x: 1, y: 1, w: 1, h: 1 }, aspectRatio),
-    });
+    createRect({ name: `Rect (${id})`, x: 1, y: 1, w: 1, h: 1 });
 
   const onDuplicateShape = () =>
     createRect(findShapeById(shapes, selectedShapeId));
@@ -86,7 +72,6 @@
     {onNewShape}
     {onSelectShapeId}
     {onDeleteShape}
-    {aspectRatio}
   />
 
   <div class="col-span-9 flex flex-col items-center mt-3">

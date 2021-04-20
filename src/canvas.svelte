@@ -3,13 +3,31 @@
   import { LineMeasure } from "./consts";
   import type { Vector2D, Rect, Shape, Unit } from "./types";
   import { getPosition } from "./utils/dom";
-  import { diffPositions, subPositions } from "./utils/math";
+  import {
+    diffPositions,
+    mapUnitRect,
+    mapUnitVector2D,
+    subPositions,
+    withinRect,
+  } from "./utils/math";
 
-  export let shapes: Shape[] = [];
   export let selectedShape: Shape | undefined;
   export let canvasSize: Vector2D;
   export let unit: Unit;
   export let aspectRatio: number;
+  export let shapes: Shape[] = [];
+
+  type X = {
+    unitSize: Rect;
+    pixelSize: Rect;
+  } & Pick<Shape, "id" | "name">;
+
+  $: mappedShapes = shapes.map<X>(({ id, name, x, y, w, h }) => ({
+    id,
+    name,
+    pixelSize: mapUnitRect({ x, y, w, h }, aspectRatio),
+    unitSize: { x, y, w, h },
+  }));
 
   let canvas: HTMLCanvasElement;
   let mousePos: { x: number; y: number } = { x: 0, y: 0 };
@@ -23,31 +41,22 @@
   export let onSelect: (selectedId: number | undefined) => void;
   export let onShapeMove: (selectedId: number, position: Vector2D) => void;
 
-  const getFont = (size: number) => {
-    return `${size}px Arial`;
-  };
+  const getFont = (size: number) => `${size}px Arial`;
 
   const clearCanvas = (ctx: CanvasRenderingContext2D | null) =>
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
 
-  const withinRect = (point: Vector2D, rect: Rect) => {
-    return (
-      point.x > rect.x &&
-      point.x < rect.x + rect.w &&
-      point.y > rect.y &&
-      point.y < rect.y + rect.h
-    );
-  };
-
   const drawToCanvas = (
     ctx: CanvasRenderingContext2D | null,
-    shapes: Shape[],
+    shapes: X[],
     selectedShape: Shape | undefined
   ) => {
     clearCanvas(ctx);
     shapes.forEach((shape) => {
       if (!ctx) return;
-      const { x, y, w, h, id, name, unitSizes } = shape;
+      const { id, name, pixelSize, unitSize } = shape;
+      const { x, y, w, h } = pixelSize;
+
       const center = { x: x + w / 2, y: y + h / 2 };
       let textSize = 0;
       let textWidth = 0;
@@ -82,12 +91,9 @@
       ctx.stroke();
       textSize = 12;
       ctx.font = getFont(textSize);
-      text = `w: ${unitSizes.w}${unit}`;
+      text = `w: ${unitSize.w}${unit}`;
       textWidth = ctx.measureText(text).width;
       ctx.fillText(text, center.x - textWidth / 2, y - 20);
-      //   if (withinRect(x, y, w, h)) {
-      //     ctx.fillText(JSON.stringify(shape, null, 2), center.x, center.y);
-      //   }
 
       // Height measure
       ctx.beginPath();
@@ -101,7 +107,7 @@
       ctx.stroke();
       textSize = 12;
       ctx.font = getFont(textSize);
-      text = `h: ${unitSizes.h}${unit}`;
+      text = `h: ${unitSize.h}${unit}`;
       textWidth = ctx.measureText(text).width;
       ctx.fillText(text, x + w + 20, y + h / 2 + textSize / 2);
     });
@@ -109,7 +115,7 @@
 
   afterUpdate(() => {
     const ctx = canvas?.getContext("2d");
-    drawToCanvas(ctx, shapes, selectedShape);
+    drawToCanvas(ctx, mappedShapes, selectedShape);
   });
 
   onMount(() => {
@@ -131,11 +137,11 @@
     let hitShapeId: number | undefined;
     let diff: Vector2D | undefined;
     const targetPoint = getTargetPoint();
-    for (const shape of shapes) {
-      const hit = withinRect(targetPoint, shape);
+    for (const { id, pixelSize } of mappedShapes) {
+      const hit = withinRect(targetPoint, pixelSize);
       if (hit) {
-        hitShapeId = shape.id;
-        diff = diffPositions(targetPoint, shape);
+        hitShapeId = id;
+        diff = diffPositions(targetPoint, pixelSize);
       }
     }
     return { hitShapeId, diff };
@@ -156,7 +162,9 @@
 
   const onDragEnd = () => {
     const { pos } = dragData;
-    if (draggedShapeId != null && pos) onShapeMove(draggedShapeId, pos);
+    if (draggedShapeId != null && pos) {
+      onShapeMove(draggedShapeId, mapUnitVector2D(pos, 1 / aspectRatio));
+    }
     draggedShapeId = undefined;
   };
 
@@ -166,21 +174,22 @@
       const t = getTargetPoint();
       const targetPoint = subPositions(t, diff);
       dragData = { diff, pos: targetPoint };
-      onShapeMove(draggedShapeId, targetPoint);
+      onShapeMove(
+        draggedShapeId,
+        mapUnitVector2D(targetPoint, 1 / aspectRatio)
+      );
     }
   };
 </script>
 
-{#key canvasSize.x + canvasSize.y}
-  <canvas
-    bind:this={canvas}
-    width={canvasSize.x}
-    height={canvasSize.y}
-    class="border-dashed border-4"
-    style="width: {canvasSize.x + 8}px; height:{canvasSize.y + 8}px;"
-    on:click={onClick}
-    on:mousedown={onDragStart}
-    on:mousemove={onMouseMove}
-    on:mouseup={onDragEnd}
-  />
-{/key}
+<canvas
+  bind:this={canvas}
+  width={canvasSize.x}
+  height={canvasSize.y}
+  class="border-dashed border-4"
+  style="width: {canvasSize.x + 8}px; height:{canvasSize.y + 8}px;"
+  on:click={onClick}
+  on:mousedown={onDragStart}
+  on:mousemove={onMouseMove}
+  on:mouseup={onDragEnd}
+/>

@@ -2,7 +2,6 @@
   export let options: string[];
   export let name: string;
   export let selected: string;
-  $: console.log({ selected });
 </script>
 
 <select
