@@ -34,7 +34,7 @@
     success: "text-white bg-green-500 hover:bg-green-600 ring-green-300",
     basic: "text-gray-900 bg-gray-200 hover:bg-gray-300 ring-gray-300",
     warn: "text-white bg-red-500 hover:bg-red-600 ring-red-300",
-    transparent: "text-gray-900 hover:bg-gray-100 ring-gray-300",
+    transparent: "text-gray-900 ring-gray-300",
   };
 
   $: paddingMultiplier = equalProportions ? 1 : 2.8;

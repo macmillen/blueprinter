@@ -17,12 +17,12 @@
   export let aspectRatio: number;
   export let shapes: Shape[] = [];
 
-  type X = {
+  type MappedShape = {
     unitSize: Rect;
     pixelSize: Rect;
   } & Pick<Shape, "id" | "name">;
 
-  $: mappedShapes = shapes.map<X>(({ id, name, x, y, w, h }) => ({
+  $: mappedShapes = shapes.map<MappedShape>(({ id, name, x, y, w, h }) => ({
     id,
     name,
     pixelSize: mapUnitRect({ x, y, w, h }, aspectRatio),
@@ -36,10 +36,10 @@
     diff?: Vector2D | undefined;
     pos?: Vector2D | undefined;
   } = {};
-  let draggedShapeId: number | undefined;
+  let draggedShapeId: string | undefined;
 
-  export let onSelect: (selectedId: number | undefined) => void;
-  export let onShapeMove: (selectedId: number, position: Vector2D) => void;
+  export let onSelect: (selectedId: string | undefined) => void;
+  export let onShapeMove: (selectedId: string, position: Vector2D) => void;
 
   const getFont = (size: number) => `${size}px Arial`;
 
@@ -48,7 +48,7 @@
 
   const drawToCanvas = (
     ctx: CanvasRenderingContext2D | null,
-    shapes: X[],
+    shapes: MappedShape[],
     selectedShape: Shape | undefined
   ) => {
     clearCanvas(ctx);
@@ -124,17 +124,16 @@
     });
   });
 
-  const getTargetPoint = () => {
+  const getTargetPoint = (): Vector2D => {
     const canvasPos = getPosition(canvas);
-    const targetPoint = {
+    return {
       x: mousePos.x - canvasPos.x,
       y: mousePos.y - canvasPos.y,
     };
-    return targetPoint;
   };
 
   const getHitShapeId = () => {
-    let hitShapeId: number | undefined;
+    let hitShapeId: string | undefined;
     let diff: Vector2D | undefined;
     const targetPoint = getTargetPoint();
     for (const { id, pixelSize } of mappedShapes) {
@@ -187,7 +186,7 @@
   width={canvasSize.x}
   height={canvasSize.y}
   class="border-dashed border-4"
-  style="width: {canvasSize.x + 8}px; height:{canvasSize.y + 8}px;"
+  style="width: {canvasSize.x + 8}px; height: {canvasSize.y + 8}px;"
   on:click={onClick}
   on:mousedown={onDragStart}
   on:mousemove={onMouseMove}

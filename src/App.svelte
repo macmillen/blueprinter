@@ -1,28 +1,32 @@
 <script lang="ts">
   import Canvas from "./canvas.svelte";
-  import Taskbar from "./taskbar.svelte";
-  import Toolbar from "./toolbar.svelte";
+  import Navbar from "./navbar.svelte";
+  import RightSidebar from "./right-sidebar.svelte";
+  import LeftSidebar from "./left-sidebar.svelte";
   import type { Vector2D, Shape, ShapeData, Unit } from "./types";
-  import { createShape, findShapeById, id } from "./utils/shape";
+  import { getLocalStorageData, storeDataToLocalStorage } from "./utils/cache";
+  import { createShape, findShapeById } from "./utils/shape";
 
-  let aspectRatio = 50;
-  let canvasSize: Vector2D = { x: 600, y: 600 };
-  let unit: Unit = "cm";
+  const localStorageData = getLocalStorageData();
 
-  let shapes: Shape[] = [
+  let aspectRatio = localStorageData.aspectRatio ?? 50;
+  let canvasSize: Vector2D = localStorageData.canvasSize ?? { x: 600, y: 600 };
+  let unit: Unit = localStorageData.unit ?? "cm";
+
+  let shapes: Shape[] = localStorageData.shapes ?? [
     createShape({ name: "hallo", x: 1, y: 1, w: 1, h: 1 }),
     createShape({ name: "second", x: 3, y: 4, w: 1, h: 1 }),
   ];
+  $: storeDataToLocalStorage({ shapes, aspectRatio, canvasSize, unit });
 
-  let selectedShapeId: number | undefined = 0;
+  let selectedShapeId: string | undefined = shapes[0]?.id;
   $: selectedShape = findShapeById(shapes, selectedShapeId);
 
-  const createRect = (shape: ShapeData | undefined) => {
-    if (!shape) return;
+  const createRect = (shape: ShapeData) => {
     const newShape = createShape({
       ...shape,
-      x: shape.x + 20,
-      y: shape.y + 20,
+      x: shape.x + (1 / aspectRatio) * 20,
+      y: shape.y + (1 / aspectRatio) * 20,
     });
     shapes = [...shapes, newShape];
     selectedShapeId = newShape.id;
@@ -36,18 +40,19 @@
     );
   };
 
-  const onNewShape = () =>
-    createRect({ name: `Rect (${id})`, x: 1, y: 1, w: 1, h: 1 });
+  const onNewShape = () => createRect({ name: "Rect", x: 1, y: 1, w: 1, h: 1 });
 
-  const onDuplicateShape = () =>
-    createRect(findShapeById(shapes, selectedShapeId));
+  const onDuplicateShape = () => {
+    const shapeToDuplicate = findShapeById(shapes, selectedShapeId);
+    if (shapeToDuplicate) createRect(shapeToDuplicate);
+  };
 
   const onDeleteShape = () => {
     shapes = [...shapes.filter(({ id }) => id !== selectedShapeId)];
     selectedShapeId = shapes[0]?.id;
   };
 
-  const onShapeMove = (selectedId: number, position: Vector2D) => {
+  const onShapeMove = (selectedId: string, position: Vector2D) => {
     shapes = shapes.reduce<Shape[]>(
       (acc, shape) => [
         ...acc,
@@ -59,34 +64,44 @@
 
   const onSelectShapeId = (shape: Shape) => (selectedShapeId = shape.id);
 
-  const onSelect = (selectedId: number | undefined) =>
+  const onSelect = (selectedId: string | undefined) =>
     (selectedShapeId = selectedId);
+
+  const onClearCanvas = () => {
+    shapes = [];
+  };
 </script>
 
-<div class="grid grid-cols-12 h-full">
-  <Taskbar
-    {shapes}
-    {selectedShape}
-    {onChange}
-    {onDuplicateShape}
-    {onNewShape}
-    {onSelectShapeId}
-    {onDeleteShape}
-  />
+<Navbar {onClearCanvas} {onDuplicateShape} {onNewShape} />
 
-  <div class="col-span-9 flex flex-col items-center mt-3">
-    <div>
-      <Toolbar bind:canvasSize bind:unit bind:aspectRatio />
-      <Canvas
-        {shapes}
-        {aspectRatio}
-        {selectedShape}
-        {onSelect}
-        {onShapeMove}
-        {canvasSize}
-        {unit}
-      />
-    </div>
+<div class="grid grid-cols-12">
+  <div
+    class="col-span-2 overflow-y-scroll"
+    style="max-height: calc(100vh - 72px);"
+  >
+    <LeftSidebar
+      {shapes}
+      {selectedShape}
+      {onChange}
+      {onSelectShapeId}
+      {onDeleteShape}
+    />
+  </div>
+
+  <div class="col-span-8 flex flex-col items-center mt-8">
+    <Canvas
+      {shapes}
+      {aspectRatio}
+      {selectedShape}
+      {onSelect}
+      {onShapeMove}
+      {canvasSize}
+      {unit}
+    />
+  </div>
+
+  <div class="col-span-2 flex flex-col gap-2 h-full max-h-screen px-6">
+    <RightSidebar bind:canvasSize bind:unit bind:aspectRatio />
   </div>
 </div>
 

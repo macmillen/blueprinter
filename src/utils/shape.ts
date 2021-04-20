@@ -1,8 +1,10 @@
 import type { Shape, ShapeData } from "src/types";
+import { uuid } from "./math";
 
-export let id = 0;
-
-export const findShapeById = (shapes: Shape[], id: number | undefined) =>
+export const findShapeById = (shapes: Shape[], id: string | undefined) =>
   shapes.find((shape) => shape.id === id);
 
-export const createShape = (data: ShapeData): Shape => ({ ...data, id: id++ });
+export const createShape = (data: ShapeData): Shape => ({
+  ...data,
+  id: uuid(),
+});

@@ -1,26 +1,25 @@
 <script lang="ts">
   import Button from "./button/button.svelte";
   import InputGroup from "./input-group.svelte";
+  import SidebarHeader from "./sidebar-header.svelte";
   import type { Shape, ShapeData } from "./types";
 
   export let selectedShape: Shape | undefined;
   export let shapes: Shape[];
 
   export let onChange: (e: Shape | undefined) => void;
-  export let onDuplicateShape: () => void;
-  export let onNewShape: () => void;
   export let onDeleteShape: () => void;
   export let onSelectShapeId: (shape: Shape) => void;
 
-  const onInput = (data: Partial<ShapeData>, isUnit = false) => {
+  const onInput = (data: Partial<ShapeData>) => {
     if (selectedShape) {
       onChange({ ...selectedShape, ...data });
     }
   };
 </script>
 
-<div class="col-span-3 flex flex-col gap-2 h-full max-h-screen mx-3">
-  <h2 class="mb-1 mt-2">Modify Shape</h2>
+<div class="flex flex-col gap-2 max-h-screen px-6">
+  <SidebarHeader>Modify Shape</SidebarHeader>
   <InputGroup
     name="name"
     value={selectedShape?.name}
@@ -30,33 +29,29 @@
     type="number"
     name="x"
     value={selectedShape?.x}
-    on:input={({ detail: x }) => onInput({ x }, true)}
+    on:input={({ detail: x }) => onInput({ x })}
   />
   <InputGroup
     type="number"
     name="y"
     value={selectedShape?.y}
-    on:input={({ detail: y }) => onInput({ y }, true)}
+    on:input={({ detail: y }) => onInput({ y })}
   />
   <InputGroup
     type="number"
     name="w"
     value={selectedShape?.w}
-    on:input={({ detail: w }) => onInput({ w }, true)}
+    on:input={({ detail: w }) => onInput({ w })}
   />
   <InputGroup
     type="number"
     name="h"
     value={selectedShape?.h}
-    on:input={({ detail: h }) => onInput({ h }, true)}
+    on:input={({ detail: h }) => onInput({ h })}
   />
 
-  <h2 class="mb-1 mt-2">Actions</h2>
-  <Button on:click={onDuplicateShape}>Duplicate Shape</Button>
-  <Button on:click={onNewShape}>New Shape</Button>
-
   <div>
-    <h2 class="mb-1 mt-2">Shapes</h2>
+    <SidebarHeader>Shapes</SidebarHeader>
     <ul>
       {#each shapes as shape}
         <li
