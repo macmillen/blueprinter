@@ -1,13 +1,15 @@
 <script lang="ts">
   import { afterUpdate, onMount } from "svelte";
   import { LineMeasure } from "./consts";
-  import type { Vector2D, Rect, Shape } from "./types";
+  import type { Vector2D, Rect, Shape, Unit } from "./types";
   import { getPosition } from "./utils/dom";
   import { diffPositions, subPositions } from "./utils/math";
 
   export let shapes: Shape[] = [];
   export let selectedShape: Shape | undefined;
   export let canvasSize: Vector2D;
+  export let unit: Unit;
+  export let aspectRatio: number;
 
   let canvas: HTMLCanvasElement;
   let mousePos: { x: number; y: number } = { x: 0, y: 0 };
@@ -45,7 +47,7 @@
     clearCanvas(ctx);
     shapes.forEach((shape) => {
       if (!ctx) return;
-      const { x, y, w, h, id, name } = shape;
+      const { x, y, w, h, id, name, unitSizes } = shape;
       const center = { x: x + w / 2, y: y + h / 2 };
       let textSize = 0;
       let textWidth = 0;
@@ -80,7 +82,7 @@
       ctx.stroke();
       textSize = 12;
       ctx.font = getFont(textSize);
-      text = `w: ${w}`;
+      text = `w: ${unitSizes.w}${unit}`;
       textWidth = ctx.measureText(text).width;
       ctx.fillText(text, center.x - textWidth / 2, y - 20);
       //   if (withinRect(x, y, w, h)) {
@@ -99,7 +101,7 @@
       ctx.stroke();
       textSize = 12;
       ctx.font = getFont(textSize);
-      text = `h: ${h}`;
+      text = `h: ${unitSizes.h}${unit}`;
       textWidth = ctx.measureText(text).width;
       ctx.fillText(text, x + w + 20, y + h / 2 + textSize / 2);
     });

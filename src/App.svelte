@@ -2,17 +2,31 @@
   import Canvas from "./canvas.svelte";
   import Taskbar from "./taskbar.svelte";
   import Toolbar from "./toolbar.svelte";
-  import type { Vector2D, Shape, ShapeData } from "./types";
-  import { createShape, findShapeById, id } from "./utils/shape";
+  import type { Vector2D, Shape, ShapeData, Unit } from "./types";
+  import {
+    createShape,
+    findShapeById,
+    getConvertedShapeSize,
+    id,
+  } from "./utils/shape";
+
+  let aspectRatio = 50;
+  let canvasSize: Vector2D = { x: 600, y: 600 };
+  let unit: Unit = "cm";
 
   let shapes: Shape[] = [
-    createShape({ name: "hallo", x: 200, y: 200, w: 200, h: 200 }),
-    createShape({ name: "second", x: 100, y: 500, w: 200, h: 80 }),
+    createShape({
+      name: "hallo",
+      ...getConvertedShapeSize({ x: 1, y: 1, w: 1, h: 1 }, aspectRatio),
+    }),
+    createShape({
+      name: "second",
+      ...getConvertedShapeSize({ x: 3, y: 4, w: 1, h: 1 }, aspectRatio),
+    }),
   ];
 
   let selectedShapeId: number | undefined = 0;
   $: selectedShape = findShapeById(shapes, selectedShapeId);
-  let canvasSize: Vector2D = { x: 600, y: 600 };
 
   const createRect = (shape: ShapeData | undefined) => {
     if (!shape) return;
@@ -36,10 +50,7 @@
   const onNewShape = () =>
     createRect({
       name: `Rect (${id})`,
-      x: 200,
-      y: 200,
-      w: 200,
-      h: 200,
+      ...getConvertedShapeSize({ x: 1, y: 1, w: 1, h: 1 }, aspectRatio),
     });
 
   const onDuplicateShape = () =>
@@ -75,12 +86,21 @@
     {onNewShape}
     {onSelectShapeId}
     {onDeleteShape}
+    {aspectRatio}
   />
 
   <div class="col-span-9 flex flex-col items-center mt-3">
     <div>
-      <Toolbar bind:canvasSize />
-      <Canvas {shapes} {selectedShape} {onSelect} {onShapeMove} {canvasSize} />
+      <Toolbar bind:canvasSize bind:unit bind:aspectRatio />
+      <Canvas
+        {shapes}
+        {aspectRatio}
+        {selectedShape}
+        {onSelect}
+        {onShapeMove}
+        {canvasSize}
+        {unit}
+      />
     </div>
   </div>
 </div>

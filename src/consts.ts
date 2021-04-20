@@ -3,3 +3,5 @@ export enum LineMeasure {
   gap = 15,
   sideH = 12,
 }
+
+export const RATIO = 50;

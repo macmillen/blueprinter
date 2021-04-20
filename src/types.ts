@@ -15,3 +15,5 @@ export type Rect = {
   w: number;
   h: number;
 } & Vector2D;
+
+export type Unit = "cm" | "m";
