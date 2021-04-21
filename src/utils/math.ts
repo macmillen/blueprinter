@@ -53,3 +53,13 @@ export const uuid = () => {
     return v.toString(16);
   });
 };
+
+export const clampVector = (
+  { x, y }: Vector2D,
+  clampValue: number
+): Vector2D => {
+  return {
+    x: x - (x % clampValue),
+    y: y - (y % clampValue),
+  };
+};

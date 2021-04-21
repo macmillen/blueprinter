@@ -4,6 +4,7 @@
   import type { Vector2D, Rect, Shape, Unit } from "./types";
   import { getPosition } from "./utils/dom";
   import {
+    clampVector,
     diffPositions,
     mapUnitRect,
     mapUnitVector2D,
@@ -16,6 +17,16 @@
   export let unit: Unit;
   export let aspectRatio: number;
   export let shapes: Shape[] = [];
+  export let canvas: HTMLCanvasElement;
+
+  const gridClamp = 0.5;
+
+  const getGridPixels = ({ x, y, w, h }: Rect, aspectRatio: number): Rect => {
+    return mapUnitRect(
+      { ...clampVector({ x, y }, gridClamp), w, h },
+      aspectRatio
+    );
+  };
 
   type MappedShape = {
     unitSize: Rect;
@@ -25,11 +36,10 @@
   $: mappedShapes = shapes.map<MappedShape>(({ id, name, x, y, w, h }) => ({
     id,
     name,
-    pixelSize: mapUnitRect({ x, y, w, h }, aspectRatio),
+    pixelSize: getGridPixels({ x, y, w, h }, aspectRatio),
     unitSize: { x, y, w, h },
   }));
 
-  let canvas: HTMLCanvasElement;
   let mousePos: { x: number; y: number } = { x: 0, y: 0 };
 
   let dragData: {
@@ -43,17 +53,20 @@
 
   const getFont = (size: number) => `${size}px Arial`;
 
-  const clearCanvas = (ctx: CanvasRenderingContext2D | null) =>
-    ctx?.clearRect(0, 0, canvas.width, canvas.height);
+  const clearCanvas = (ctx: CanvasRenderingContext2D) => {
+    ctx.fillStyle = "white";
+    ctx.rect(0, 0, canvas.width, canvas.height);
+    ctx.fill();
+  };
 
   const drawToCanvas = (
     ctx: CanvasRenderingContext2D | null,
     shapes: MappedShape[],
     selectedShape: Shape | undefined
   ) => {
+    if (!ctx) return;
     clearCanvas(ctx);
     shapes.forEach((shape) => {
-      if (!ctx) return;
       const { id, name, pixelSize, unitSize } = shape;
       const { x, y, w, h } = pixelSize;
 
@@ -62,13 +75,16 @@
       let textWidth = 0;
       let text = "";
 
+      const targetPoint = getTargetPoint();
+      const isHover = withinRect(targetPoint, pixelSize);
+
       // Shape
       if (selectedShape?.id === id) {
         ctx.fillStyle = "#6ee7b7";
       } else {
         ctx.fillStyle = "#fff";
         ctx.strokeStyle = "#666";
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 2;
       }
       ctx.strokeRect(x, y, w, h);
       ctx.fillRect(x, y, w, h);
@@ -77,39 +93,43 @@
       textSize = 18;
       ctx.font = getFont(textSize);
       textWidth = ctx.measureText(name).width;
-      ctx.fillText(name, center.x - textWidth / 2, center.y + textSize / 2);
+      if (isHover) {
+        ctx.fillText(name, center.x - textWidth / 2, center.y + textSize / 2);
+      }
 
-      // Width measure
-      ctx.beginPath();
-      ctx.lineWidth = LineMeasure.strokeW;
-      ctx.moveTo(x, y - LineMeasure.gap);
-      ctx.lineTo(x + w, y - LineMeasure.gap);
-      ctx.moveTo(x + w, y - LineMeasure.gap - LineMeasure.sideH / 2);
-      ctx.lineTo(x + w, y - LineMeasure.gap + LineMeasure.sideH / 2);
-      ctx.moveTo(x, y - LineMeasure.gap - LineMeasure.sideH / 2);
-      ctx.lineTo(x, y - LineMeasure.gap + LineMeasure.sideH / 2);
-      ctx.stroke();
-      textSize = 12;
-      ctx.font = getFont(textSize);
-      text = `w: ${unitSize.w}${unit}`;
-      textWidth = ctx.measureText(text).width;
-      ctx.fillText(text, center.x - textWidth / 2, y - 20);
+      if (isHover) {
+        // Width measure
+        ctx.beginPath();
+        ctx.lineWidth = LineMeasure.strokeW;
+        ctx.moveTo(x, y - LineMeasure.gap);
+        ctx.lineTo(x + w, y - LineMeasure.gap);
+        ctx.moveTo(x + w, y - LineMeasure.gap - LineMeasure.sideH / 2);
+        ctx.lineTo(x + w, y - LineMeasure.gap + LineMeasure.sideH / 2);
+        ctx.moveTo(x, y - LineMeasure.gap - LineMeasure.sideH / 2);
+        ctx.lineTo(x, y - LineMeasure.gap + LineMeasure.sideH / 2);
+        ctx.stroke();
+        textSize = 12;
+        ctx.font = getFont(textSize);
+        text = `w: ${unitSize.w}${unit}`;
+        textWidth = ctx.measureText(text).width;
+        ctx.fillText(text, center.x - textWidth / 2, y - 20);
 
-      // Height measure
-      ctx.beginPath();
-      ctx.lineWidth = LineMeasure.strokeW;
-      ctx.moveTo(x + w + LineMeasure.gap, y);
-      ctx.lineTo(x + w + LineMeasure.gap, y + h);
-      ctx.moveTo(x + w + LineMeasure.gap + LineMeasure.sideH / 2, y);
-      ctx.lineTo(x + w + LineMeasure.gap - LineMeasure.sideH / 2, y);
-      ctx.moveTo(x + w + LineMeasure.gap + LineMeasure.sideH / 2, y + h);
-      ctx.lineTo(x + w + LineMeasure.gap - LineMeasure.sideH / 2, y + h);
-      ctx.stroke();
-      textSize = 12;
-      ctx.font = getFont(textSize);
-      text = `h: ${unitSize.h}${unit}`;
-      textWidth = ctx.measureText(text).width;
-      ctx.fillText(text, x + w + 20, y + h / 2 + textSize / 2);
+        // Height measure
+        ctx.beginPath();
+        ctx.lineWidth = LineMeasure.strokeW;
+        ctx.moveTo(x + w + LineMeasure.gap, y);
+        ctx.lineTo(x + w + LineMeasure.gap, y + h);
+        ctx.moveTo(x + w + LineMeasure.gap + LineMeasure.sideH / 2, y);
+        ctx.lineTo(x + w + LineMeasure.gap - LineMeasure.sideH / 2, y);
+        ctx.moveTo(x + w + LineMeasure.gap + LineMeasure.sideH / 2, y + h);
+        ctx.lineTo(x + w + LineMeasure.gap - LineMeasure.sideH / 2, y + h);
+        ctx.stroke();
+        textSize = 12;
+        ctx.font = getFont(textSize);
+        text = `h: ${unitSize.h}${unit}`;
+        textWidth = ctx.measureText(text).width;
+        ctx.fillText(text, x + w + 20, y + h / 2 + textSize / 2);
+      }
     });
   };
 
@@ -181,14 +201,16 @@
   };
 </script>
 
-<canvas
-  bind:this={canvas}
-  width={canvasSize.x}
-  height={canvasSize.y}
-  class="border-dashed border-4"
-  style="width: {canvasSize.x + 8}px; height: {canvasSize.y + 8}px;"
-  on:click={onClick}
-  on:mousedown={onDragStart}
-  on:mousemove={onMouseMove}
-  on:mouseup={onDragEnd}
-/>
+{#key mousePos}
+  <canvas
+    bind:this={canvas}
+    width={canvasSize.x}
+    height={canvasSize.y}
+    class="border-dashed border-4"
+    style="width: {canvasSize.x + 8}px; height: {canvasSize.y + 8}px;"
+    on:click={onClick}
+    on:mousedown={onDragStart}
+    on:mousemove={onMouseMove}
+    on:mouseup={onDragEnd}
+  />
+{/key}

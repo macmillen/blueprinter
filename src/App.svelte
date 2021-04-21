@@ -13,6 +13,8 @@
   let canvasSize: Vector2D = localStorageData.canvasSize ?? { x: 600, y: 600 };
   let unit: Unit = localStorageData.unit ?? "cm";
 
+  let canvas: HTMLCanvasElement;
+
   let shapes: Shape[] = localStorageData.shapes ?? [
     createShape({ name: "hallo", x: 1, y: 1, w: 1, h: 1 }),
     createShape({ name: "second", x: 3, y: 4, w: 1, h: 1 }),
@@ -70,13 +72,23 @@
   const onClearCanvas = () => {
     shapes = [];
   };
+
+  const onDownloadImage = () => {
+    const image = canvas
+      .toDataURL("image/png", 1.0)
+      .replace("image/png", "image/octet-stream");
+    const link = document.createElement("a");
+    link.download = "sketch.png";
+    link.href = image;
+    link.click();
+  };
 </script>
 
-<Navbar {onClearCanvas} {onDuplicateShape} {onNewShape} />
+<Navbar {onClearCanvas} {onDuplicateShape} {onNewShape} {onDownloadImage} />
 
 <div class="grid grid-cols-12">
   <div
-    class="col-span-2 overflow-y-scroll"
+    class="col-span-2 overflow-y-auto"
     style="max-height: calc(100vh - 72px);"
   >
     <LeftSidebar
@@ -97,6 +109,7 @@
       {onShapeMove}
       {canvasSize}
       {unit}
+      bind:canvas
     />
   </div>
 
