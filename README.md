@@ -1,36 +1,38 @@
-# Svelte with Typescript and TailwindCSS built with Snowpack
+# create-svelte
 
-> ✨ Community template for Snowpack + Svelte + Typescript + TailwindCSS
+Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
 
-Create a new project with:
+## Creating a project
+
+If you're seeing this, you've probably already done this step. Congrats!
 
 ```bash
-npx create-snowpack-app dir-name --template snowpack-svelte-ts-tw
+# create a new project in the current directory
+npm init svelte
+
+# create a new project in my-app
+npm init svelte my-app
 ```
 
-Uses `svelte-preprocess`
+## Developing
 
-## Available Scripts
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
-### npm start
+```bash
+npm run dev
 
-Runs the app in the development mode.
-Open http://localhost:8080 to view it in the browser.
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
+```
 
-The page will reload if you make edits.
-You will also see any lint errors in the console.
+## Building
 
-### npm run build
+To create a production version of your app:
 
-Builds a static copy of your site to the `build/` folder.
-Your app is ready to be deployed!
+```bash
+npm run build
+```
 
-**For the best production performance:** Add a build bundler plugin like "@snowpack/plugin-webpack" or "@snowpack/plugin-parcel" to your `snowpack.config.json` config file.
+You can preview the production build with `npm run preview`.
 
-### Q: What about Eject?
-
-No eject needed! Snowpack guarantees zero lock-in, and CSA strives for the same.
-
-### Q: Husky/Lint-Staged
-
-You will notice that `Husky`/`Lint-Staged` configs are already present in the `package.json` file, but not in the `devDependencies`, this is because CSA installs packages and then inits the `git` repo, so the `Husky` commit hook installation fails. To reenable `Husky`/`Lint-Staged`, just re-add `Husky` and `Lint-Staged` to the `devDependencies` and you should be good to go!
+> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.

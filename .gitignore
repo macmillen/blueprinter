@@ -1,5 +1,8 @@
-.build
-build
-web_modules
+.DS_Store
 node_modules
-yarn-error.log
+/build
+/.svelte-kit
+/package
+.env
+.env.*
+!.env.example
